@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html><head>
+<title>Paxos Made Moderately Complex</title>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="description" content="" />
+<LINK href="static/main.css" type="text/css" rel="stylesheet">
+<link rel="icon" type="image/png" href="static/favicon.png">
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.1/jquery.min.js"></script>
+
+<!-- Google Analytics -->
+<script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+     m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+     })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+     ga('create', 'UA-55641322-1', 'auto');
+     ga('send', 'pageview');
+
+    </script>
+
+<!-- MathJax for Latex -->
+<link rel="stylesheet" href="static\main.css">
+<script type="text/x-mathjax-config">
+            // <![CDATA[
+            MathJax.Hub.Config({
+            TeX: {extensions: ["AMSmath.js", "AMSsymbols.js"]},
+            extensions: ["tex2jax.js"],
+            jax: ["input/TeX", "output/HTML-CSS"],
+            showProcessingMessages : false,
+            messageStyle : "none" ,
+            showMathMenu: false ,
+            tex2jax: {
+            processEnvironments: true,
+            inlineMath: [ ['$','$'], [" ("," )"] ],
+            displayMath: [ ['$$','$$'], [" ["," ]"] ],
+            preview : "none",
+            processEscapes: true
+            },
+            "HTML-CSS": { linebreaks: { automatic:true, width: "latex-container"} }
+            });
+            // ]]>
+</script>
+<script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+<script type="text/javascript" src="latex2html5.min.js"></script>
+
+</head><body>
+
+<IMG class="logo" src="static/logo.png" width=180>
+
+<div class="grid">
+<!-- ===================================== END HEADER ===================================== -->
+<nav class="navbar">
+  <ul>
+    <li><a href="index.html">Paxos</a></li>
+    <li><a href="why.html">Why?</a></li>
+    <li><a href="how.html" style="color:white;">How?</a>
+      <ul>
+	<li><a href="replica.html">Replicas</a></li>
+	<li><a href="acceptor.html">Acceptors</a></li>
+	<li><a href="leader.html">Leaders</a></li>
+      </ul>
+    </li>
+    <li><a href="when.html">When?</a></li>
+    <li><a href="variants.html">Variants</a></li>
+    <li><a href="code.html">Code</a></li>
+    <li><a href="glossary.html">Glossary</a></li>
+    <li><a href="about.html">About</a></li>
+    <li><a href="links.html">Links</a></li>
+  </ul>
+</nav>
+<div id=main>
+
+<h1>Leaders</h1>
+<script type="tex/latex">
+<div class="latex">
+<p>Leaders use \emph{Commander} and \emph{Scout} subprocesses to run the Synod protocol.</p>
+
+<h6>Leader Invariants</h6>
+<p>As we shall see, the following invariants hold in the Synod
+protocol:
+
+<ul>
+<li>L1: For any ballot $b$ and slot $s$, at most one command $c$ is
+  selected and at most one commander for $\langle b, s, c \rangle$ is spawned.</li>
+<li>L2: Suppose that for each $\alpha$ among a majority of
+  acceptors $\langle b, s, c \rangle \in \alpha.accepted$.  If $b' > b$
+  and a commander is spawned for $\langle b', s, c' \rangle$, then $c
+  = c'$.</li>
+</ul>
+
+<p>Invariant L1 implies Invariant A4, because by L1 all acceptors that
+accept a pvalue for a particular ballot and slot number received the
+pvalue from the same commander. Similarly, Invariant L2 implies
+Invariant A5.</p>
+
+<h6>Commander</h6>
+<p>A leader may work on multiple slots at the same time. For each such
+slot, the leader selects a command and spawns a new process that we
+call a commander. While we present it as a separate process,
+the commander is really just a thread running within the leader. The
+commander runs what is known as \emph{phase 2} of the Synod protocol.</p>
+
+<p>Below you can find the pseudo-code for a Commander:</p>
+</div>
+
+<!-- Begin Commander Latex -->
+<div class="latexcode">
+$\texttt{process} ~ \textit{Commander}(\lambda, \textit{acceptors}, \textit{replicas}, \langle b, s, c \rangle)$
+<br>&nbsp;&nbsp;$\texttt{var} ~ \textit{waitfor} := \textit{acceptors}$;
+<br>
+<br>&nbsp;&nbsp;$\forall \alpha \in \textit{acceptors}: \textit{send}(\alpha,
+\langle \textbf{p2a}, \textit{self}(), \langle b, s, c \rangle \rangle)$;
+<br>&nbsp;&nbsp;$\texttt{for ever}$
+<br>&nbsp;&nbsp;&nbsp;&nbsp;$\texttt{switch} ~ \textit{receive}()$
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$\texttt{case} ~ \langle \textbf{p2b}, \alpha, b' \rangle:$
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$\texttt{if} ~ b' = b ~ \texttt{then}$
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$\textit{waitfor} := \textit{waitfor} - \{ \alpha \}$;
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$\texttt{if} ~ |\textit{waitfor}| < |\textit{acceptors}| / 2 ~ \texttt{then}$
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$\forall \rho \in \textit{replicas}:$
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$\textit{send}(\rho, \langle \textbf{decision}, s, c \rangle$);
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$\textit{exit}()$;
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$\texttt{end if}$
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$\texttt{else}$
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$\textit{send}(\lambda, \langle \textbf{preempted}, b' \rangle)$;
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$\textit{exit}()$;
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$\texttt{end if}$
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$\texttt{end case}$
+<br>&nbsp;&nbsp;&nbsp;&nbsp;$\texttt{end switch}$
+<br>&nbsp;&nbsp;$\texttt{end for}$
+<br>$\texttt{end process}$
+</div>
+
+<div class="latex">
+
+<p>A commander sends a $\langle \textbf{p2a}, \lambda, \langle b, s, c
+\rangle \rangle$ message to all acceptors, and waits for responses of
+the form $\langle \textbf{p2b}, \alpha, b' \rangle$.  In each such
+response $b' \ge b$ will hold.  There are two cases:
+
+<ul>
+<li>If a commander receives $\langle \textbf{p2b}, \alpha, b \rangle$
+  from all acceptors in a majority of acceptors, then the commander
+  learns that command $c$ has been chosen for slot $s$.  In this case,
+  the commander notifies all replicas and exits.  To satisfy
+  Invariant R1, we need to enforce that if a commander learns that $c$
+  is chosen for slot $s$, and another commander learns that $c'$ is
+  chosen for the same slot $s$, then $c = c'$.  This is a consequence
+  of Invariant A5: if a majority of acceptors accept $\langle b, s, c
+  \rangle$, then for any later ballot $b'$ and the same slot number
+  $s$, acceptors can only accept $\langle b', s, c \rangle$.  Thus if
+  the commander of $\langle b', s, c' \rangle$ learns that $c'$ has
+  been chosen for $s$, it is guaranteed that $c = c'$ and no
+  inconsistency occurs, assuming---of course---that Invariant L2
+  holds.</li>
+
+<li>If a commander receives $\langle \textbf{p2b}, \alpha', b'
+  \rangle$ from some acceptor $\alpha'$, with $b' \ne b$, then it
+  learns that a ballot $b'$, which must be larger than $b$ as
+  guaranteed by acceptors, is active.  This means that ballot $b$ may
+  no longer be able to make progress, as there may no longer exist a
+  majority of acceptors that can accept $\langle b, s, c \rangle$.  In
+  this case, the commander notifies its leader about the existence of
+  $b'$, and exits.</li>
+</ul>
+
+<p>Under the assumptions that at most a minority of acceptors can crash,
+that messages are delivered reliably, and that the commander does not crash,
+the commander will eventually do one or the other.</p>
+
+<p>The leader must enforce Invariants L1 and L2.  Because there is
+only one leader per ballot, Invariant L1 is trivial to enforce by the
+leader not spawning more than one commander per ballot number and slot
+number. To enforce Invariant L2, the leader runs what is often called
+\emph{phase 1} of the Synod protocol or a \emph{view change} protocol
+for some ballot before spawning commanders for that ballot. The leader
+spawns a \emph{scout} thread to run the view change protocol for some
+ballot $b$.  A leader starts at most one of these for any ballot $b$,
+and only for its own ballots.</p>
+
+<h6>Scout</h6>
+<p>Below you can find the pseudo-code for a scout.  The
+code is similar to that of a commander, except that it sends and
+receives phase 1 messages instead of phase 2 messages.</p>
+
+</div>
+<!-- Begin Scout Latex -->
+<div class="latexcode">
+$\texttt{process} ~ \textit{Scout}(\lambda, \textit{acceptors}, b)$
+<br>&nbsp;&nbsp;$\texttt{var} ~ \textit{waitfor} := \textit{acceptors}, ~ pvalues := \emptyset$;
+<br>
+<br>&nbsp;&nbsp;$\forall \alpha \in \textit{acceptors}: \textit{send}(\alpha,\langle \textbf{p1a}, self(), b \rangle)$;
+<br>&nbsp;&nbsp;$\texttt{for ever}$
+<br>&nbsp;&nbsp;&nbsp;&nbsp;$\texttt{switch} ~ \textit{receive}()$
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$\texttt{case} ~ \langle \textbf{p1b}, \alpha, b', r \rangle:$
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$\texttt{if} ~ b' = b ~ \texttt{then}$
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$pvalues := pvalues \cup r$;
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$\textit{waitfor} := \textit{waitfor} - \{ \alpha \}$;
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$\texttt{if} ~ |\textit{waitfor}| < |\textit{acceptors}| / 2 ~ \texttt{then}$
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$\textit{send}(\lambda, \langle \textbf{adopted}, b, pvalues \rangle)$;
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$\textit{exit}()$;
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$\texttt{end if}$
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$\texttt{else}$
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$\textit{send}(\lambda, \langle \textbf{preempted}, b' \rangle)$;
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$\textit{exit}()$;
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$\texttt{end if}$
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$\texttt{end case}$
+<br>&nbsp;&nbsp;&nbsp;&nbsp;$\texttt{end switch}$
+<br>&nbsp;&nbsp;$\texttt{end for}$
+<br>$\texttt{end process}$
+</div>
+
+<div class="latex">
+<p>A scout completes successfully when it has collected $\langle
+\textbf{p1b}, \alpha, b, r_\alpha \rangle$ messages from all acceptors
+in a majority, and returns an $\langle \textbf{adopted}, b, \bigcup
+r_\alpha \rangle$ message to its leader $\lambda$.  As we will see
+later, the leader uses $\bigcup r_\alpha$, the union of all pvalues
+accepted by this majority of acceptors, in order to enforce Invariant
+L2.</p>
+
+<h6>Leader State</h6>
+<p>Leader $\lambda$ maintains three state variables:
+
+<ul>
+<li>$\lambda.ballot\_num$: a monotonically increasing ballot number, initially
+  $(0, \lambda)$.</li>
+<li>$\lambda.\textit{active}$: a boolean flag, initially
+  $\texttt{false}$.</li>
+<li>$\lambda.\textit{proposals}$: a map of slot numbers to proposed
+  commands in the form of a set of $\langle \textit{slot number},
+  \textit{command} \,\rangle$ pairs, initially empty.  At any time,
+  there is at most one entry per slot number in the set.</li>
+</ul>
+
+<h6>Leader Operational Description</h6>
+<p>Below you can find the pseudo-code for a Leader:</p>
+</div>
+<!-- Begin Leader Latex -->
+<div class="latexcode">
+$\texttt{process} ~ \textit{Leader}(\textit{acceptors}, \textit{replicas})$
+<br>&nbsp;&nbsp;$\texttt{var} ~ ballot\_num = (0, self()), \textit{active} = \texttt{false},\textit{proposals} = \emptyset$;
+<br>
+<br>&nbsp;&nbsp;$\textit{spawn}(\textit{Scout}(self(), \textit{acceptors}, ballot\_num))$;
+<br>&nbsp;&nbsp;$\texttt{for ever}$
+<br>&nbsp;&nbsp;&nbsp;&nbsp;$\texttt{switch} ~ \textit{receive}()$
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$\texttt{case} ~ \langle \textbf{propose}, s, c \rangle:$ <br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$\texttt{if} ~\not\exists c' : \langle s, c' \rangle \in \textit{proposals} ~ \texttt{then}$ <br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$\textit{proposals} := \textit{proposals} \cup \{ \langle s, c \rangle \}$; <br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$\texttt{if} ~ \textit{active} ~ \texttt{then}$ <br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$\textit{spawn}(\textit{Commander}(self(), \textit{acceptors}, \textit{replicas}, \langle ballot\_num, s, c \rangle)$; <br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$\texttt{end if}$ <br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$\texttt{end if}$ <br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$\texttt{end case}$ <br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$\texttt{case} ~ \langle \textbf{adopted}, ballot\_num, \textit{pvals} \rangle:$ <br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$\textit{proposals} := \textit{proposals} \lhd \textit{pmax}(\textit{pvals})$; <br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$\forall \langle s, c \rangle \in \textit{proposals}:$ <br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$\textit{spawn}(\textit{Commander}(self(), \textit{acceptors}, \textit{replicas}, \langle ballot\_num, s, c \rangle)$; <br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$\textit{active} := \texttt{true}$; <br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$\texttt{end case}$ <br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$\texttt{case} ~ \langle \textbf{preempted}, \langle r', {\lambda'} \rangle \rangle:$ <br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$\texttt{if} ~ (r', {\lambda'}) > ballot\_num ~ \texttt{then}$ <br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$\textit{active} := \texttt{false}$; <br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$ballot\_num := (r' + 1, self())$; <br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$\textit{spawn}(\textit{Scout}(self(), \textit{acceptors}, ballot\_num))$; <br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$\texttt{end if}$ <br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$\texttt{end case}$ <br>
+&nbsp;&nbsp;&nbsp;&nbsp;$\texttt{end switch}$ <br>
+&nbsp;&nbsp;$\texttt{end for}$ <br>
+$\texttt{end process}$
+</div>
+
+<div class="latex">
+<p>The leader starts by spawning a scout for its initial ballot
+number, and then enters into a loop awaiting messages.  There are
+three types of messages that cause transitions:
+
+<ul>
+<li> $\langle \textbf{propose}, s, c \rangle$: A replica proposes
+  command $c$ for slot number $s$.</li>
+<li> $\langle \textbf{adopted}, ballot\_num, \textit{pvals} \rangle$: Sent by
+  a scout, this message signifies that the current ballot number $ballot\_num$
+  has been adopted by a majority of acceptors. If an
+  \textbf{adopted} message arrives for an old ballot number, it is
+  ignored. The set $\textit{pvals}$ contains all pvalues accepted by
+  these acceptors prior to $ballot\_num$.</li>
+<li> $\langle \textbf{preempted}, \langle r', {\lambda'} \rangle
+  \rangle$: Sent by either a scout or a commander, it means that some
+  acceptor has adopted $\langle r', {\lambda'} \rangle$.  If $\langle
+  r', {\lambda'} \rangle > ballot\_num$, it may no longer be possible to use
+  ballot $ballot\_num$ to choose a command.</li>
+</ul>
+
+<p>A leader goes between \emph{passive} and \emph{active} modes.  When
+passive, the leader is waiting for an $\langle \textbf{adopted}, ballot\_num,
+\textit{pvals} \rangle$ message from the last scout that it spawned.
+When this message arrives, the leader becomes active and spawns
+commanders for each of the slots for which it has a proposed command,
+but must select commands that satisfy Invariant L2.  We will now
+consider how the leader goes about this.</p>
+
+<p>When active, the leader knows that a majority of acceptors, say $\cal
+A$, have adopted $ballot\_num$ and thus no longer accept pvalues for ballot
+numbers less than $ballot\_num$, because of Invariants A1 and A2.  In
+addition, it has all pvalues accepted by the acceptors in $\cal A$
+prior to $ballot\_num$. The leader uses these pvalues to update its own
+proposals variable. There are two cases to consider:
+
+<ul>
+<li> If, for some slot $s$, there is no pvalue in $\textit{pvals}$,
+  then, prior to $ballot\_num$, it is not possible that any pvalue has
+  been chosen or will be chosen for slot $s$.  After all, suppose that
+  some pvalue $\langle b, s, c \rangle$ were chosen, with $b <
+  ballot\_num$.  This would require a majority of acceptors ${\cal
+  A}'$ to accept $\langle b, s, c \rangle$, but we have responses from
+  a majority ${\cal A}$ that have adopted $ballot\_num$ and have not
+  accepted, nor can accept, pvalues with a ballot number smaller than
+  $ballot\_num$, by Invariants A1 and A2.  Because both ${\cal A}$ and
+  ${\cal A}'$ are majorities, ${\cal A} \cap {\cal A}'$ is
+  non-empty---some acceptor in the intersection must have violated
+  Invariant A1, A2, or A3, which we assume cannot happen.  Because no
+  pvalue has been or will be chosen for slot $s$ prior to
+  $ballot\_num$, the leader can propose any command for that slot
+  without causing a conflict on an earlier ballot, thus enforcing
+  Invariant L2.</li>
+
+<li> Otherwise, let $\langle b, s, c \rangle$ be the pvalue with the
+  maximum ballot number for slot $s$.  Because of Invariant A4, this
+  pvalue is unique---there cannot be two different commands for the
+  same ballot number and slot number.  Also note that $b <
+  ballot\_num$, because acceptors only report pvalues they accepted
+  before adopting $ballot\_num$.  Like the leader of $ballot\_num$,
+  the leader of $b$ must have picked $c$ carefully to ensure that
+  Invariant L2 holds, and thus if a pvalue is chosen before or at $b$,
+  the command it contains must be $c$.  Since all acceptors in $\cal
+  A$ have adopted $ballot\_num$, no pvalues between $b$ and
+  $ballot\_num$ can be chosen, by Invariants A1 and A2.  Thus, by using
+  $c$ as a command, $\lambda$ enforces Invariant L2.</li>
+</ul>
+
+<p>This inductive argument is the crux for the correctness of the Synod
+protocol.  It demonstrates that Invariant L2 holds, which in turn
+implies Invariant A5, which in turn implies Invariant R1 that ensures
+that all replicas apply the same operations in the same order.</p>
+
+<p>Back to the code, after the leader receives $\langle \textbf{adopted},
+ballot\_num, \textit{pvals} \rangle$, it determines for each slot the command
+corresponding to the maximum ballot number in $\textit{pvals}$ by
+invoking the function $\textit{pmax}$.  Formally, the function
+$\textit{pmax}(\textit{pvals})$ is defined as follows:</p>
+
+<center>
+$
+\textit{pmax}(\textit{pvals}) \equiv \{ \langle s, c \rangle ~|~
+\exists b: \langle b, s, c \rangle \in \textit{pvals} ~\wedge
+\\ ~~~~~~~~~~\forall b', c': \langle b', s, c' \rangle \in
+\textit{pvals} \Rightarrow b' \le b ~\}
+$
+</center>
+
+<p>The update operator $\lhd$ applies to two sets of proposals.  $x \lhd
+y$ returns the elements of $y$ as well as the elements of $x$ that are
+not in $y$. Formally:</p>
+
+<center>
+$ x \lhd y \equiv \{ \langle s, c \rangle ~|~ \langle s, c \rangle \in
+y ~\vee \\ ~~~~~~~~~~~~~~~~~~~~~~~~~~ (\langle s, c \rangle \in x ~ \wedge \not\exists c':
+\langle s, c' \rangle \in y) \} $
+</center>
+
+<p>Thus the line $\textit{proposals} := \textit{proposals} \lhd
+\textit{pmax}(\textit{pvals});$ updates the set of proposals,
+replacing for each slot number the command corresponding to the
+maximum pvalue in $\textit{pvals}$, if any. Now the leader can start
+commanders for each slot while satisfying Invariant L2.</p>
+
+<p>If a new proposal arrives while the leader is active, the leader
+checks to see if it already has a proposal for the same slot (and has
+thus spawned a commander for that slot) in its set \textit{proposals}.
+If not, the new proposal will satisfy Invariant L2, and thus the
+leader adds the proposal to $\textit{proposals}$ and spawns a
+commander.</p>
+
+<p>If either a scout or a commander detects that an acceptor has
+adopted a ballot number $b$, with $b > ballot\_num$, then it sends the leader
+a $\texttt{preempted}$ message.  The leader becomes passive and spawns
+a new scout with a ballot number that is higher than $b$.</p>
+
+<p>Below is an example of a leader $\lambda$ spawning a scout to
+become active, and a client $\kappa$ sending a request to two replicas
+$\rho_1$ and $\rho_2$, which in turn send proposals to $\lambda$.</p>
+
+<p class="centeredImg">
+<img src="static/paxos.png" width="80%" vspace="30">
+</p>
+
+<div class="paging">
+<nav><a href="acceptor.html"><b>&larr; The Synod Protocol and Acceptors</b></a></nav>
+<p><a href="when.html"><b>When does Paxos work? &rarr;</b></a></p>
+</div>
+
+</script>
+</div>
+<script>
+    $('body').latex();
+</script>
+
+<!-- ===================================== START FOOTER ===================================== -->
+<div class="clear"></div>
+<div id="footer">
+  <a href="http://www.cs.cornell.edu/">Computer Science Department</a><br>
+  <a href="http://www.cornell.edu/">Cornell University</a>
+</div>
+
+</body></html>
+

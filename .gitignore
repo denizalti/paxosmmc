@@ -1,0 +1,8 @@
+*.tar.gz
+*~
+*.pyc
+*.tar
+*.zip
+*.tar.bz2
+.DS_Store
+*.egg-info
