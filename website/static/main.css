@@ -166,10 +166,16 @@ IMG.logo{
     padding : 20px;
 }
 
-#twitter-follow-button {
+#twitter-logo {
     position:absolute;
     top:200px;
     right:0;
+}
+
+#github-logo {
+    position: fixed;
+    bottom: 10px;
+    right: 10px;
 }
 
 #banner {
@@ -372,7 +378,7 @@ pre.literal {
     font-size:0.8em;
     text-shadow:0px 1px 1px #fff;
     position: relative;
-    bottom:0px;
+    bottom:10px;
     height:20px;
     width:100%;
     background:#fff;
