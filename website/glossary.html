@@ -96,6 +96,8 @@ distributed systems: the fact that replicas (processes) need to agree
 on the next state transition they handle, so that they can remain in
 identical states. <a href="#paxos">Paxos</a> solves the consensus
 problem in an asynchronous environment, where processes can crash.
+But Paxos is limited by the <a href="#flp">FLP Impossibility Result</a>
+in its ability to reach consensus.
 </p>
 
 <p><a class="entry" name="consistency"><b>Consistency:</b></a>
