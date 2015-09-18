@@ -87,17 +87,18 @@ other unspecified transitions. <a href="#paxos">Paxos</a> does not
 solve the <a href="#consensus">consensus</a> problem in the existence of byzantine
 failures.</p>
 
-<p><a class="entry" name="consensus"><b>Consensus:</b></a>
-In the consensus problem, each process proposes some
-initial value, and processes that do not fail must reach an
-irrevocable decision on exactly one of the proposed values. The
-consensus problem captures an essential component of replication in
-distributed systems: the fact that replicas (processes) need to agree
-on the next state transition they handle, so that they can remain in
-identical states. <a href="#paxos">Paxos</a> solves the consensus
-problem in an asynchronous environment, where processes can crash.
-But Paxos is limited by the <a href="#flp">FLP Impossibility Result</a>
-in its ability to reach consensus.
+<p><a class="entry" name="consensus"><b>Consensus:</b></a> In the
+consensus problem, each process proposes some initial value, and
+processes that do not fail must reach an irrevocable decision on
+exactly one of the proposed values. The consensus problem captures an
+essential component of replication in distributed systems: the fact
+that replicas (processes) need to agree on the next state transition
+they handle, so that they can remain in identical
+states. <a href="#paxos">Paxos</a> solves the consensus problem in an
+asynchronous environment, where processes can crash.  But Paxos (much
+like any other consensus protocol) is limited by
+the <a href="#flp">FLP Impossibility Result</a> in its ability to
+reach consensus in an asynchronous environment where processes can crash.
 </p>
 
 <p><a class="entry" name="consistency"><b>Consistency:</b></a>
