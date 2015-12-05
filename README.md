@@ -2,7 +2,7 @@
 
 This repository includes the Python source code
 corresponding to the Paxos code presented on http://paxos.systems, as
-well as the contents of the website (as branch gh-pages).
+well as the contents of the website (as branch gh-pages).
 
 You can run the source code as follows:
 
