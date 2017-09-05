@@ -72,9 +72,8 @@
 <div id=main>
 
 <h1>Leaders</h1>
-<script type="tex/latex">
 <div class="latex">
-<p>Leaders use \emph{Commander} and \emph{Scout} subprocesses to run the Synod protocol.</p>
+<p>Leaders use $Commander$ and $Scout$ subprocesses to run the Synod protocol.</p>
 
 <h6>Leader Invariants</h6>
 <p>As we shall see, the following invariants hold in the Synod
@@ -99,7 +98,7 @@ Invariant A5.</p>
 slot, the leader selects a command and spawns a new process that we
 call a commander. While we present it as a separate process,
 the commander is really just a thread running within the leader. The
-commander runs what is known as \emph{phase 2} of the Synod protocol.</p>
+commander runs what is known as $phase$ $2$ of the Synod protocol.</p>
 
 <p>Below you can find the pseudo-code for a Commander:</p>
 </div>
@@ -172,9 +171,9 @@ the commander will eventually do one or the other.</p>
 only one leader per ballot, Invariant L1 is trivial to enforce by the
 leader not spawning more than one commander per ballot number and slot
 number. To enforce Invariant L2, the leader runs what is often called
-\emph{phase 1} of the Synod protocol or a \emph{view change} protocol
+$phase$ $1$ of the Synod protocol or a $view$ $change$ protocol
 for some ballot before spawning commanders for that ballot. The leader
-spawns a \emph{scout} thread to run the view change protocol for some
+spawns a $scout$ thread to run the view change protocol for some
 ballot $b$.  A leader starts at most one of these for any ballot $b$,
 and only for its own ballots.</p>
 
@@ -291,7 +290,7 @@ three types of messages that cause transitions:
   ballot $ballot\_num$ to choose a command.</li>
 </ul>
 
-<p>A leader goes between \emph{passive} and \emph{active} modes.  When
+<p>A leader goes between $passive$ and $active$ modes.  When
 passive, the leader is waiting for an $\langle \textbf{adopted}, ballot\_num,
 \textit{pvals} \rangle$ message from the last scout that it spawned.
 When this message arrives, the leader becomes active and spawns

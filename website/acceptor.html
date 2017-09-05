@@ -72,19 +72,18 @@
 <div id=main>
 
 <h1>The Synod Protocol and Acceptors</h1>
-<script type="tex/latex">
 <div class="latex">
 <p>In the Synod protocol, there is an unbounded collection of
-\emph{ballots}. Ballots are the key to liveness properties in
-Paxos. Each ballot has a unique \emph{leader}. A leader can be working
-on arbitrarily many ballots, although it will be predominantly working
-on one at a time.  A leader process has a unique identifier called the
-\emph{leader identifier}. Each ballot has a unique identifier, called
-its \emph{ballot number}. Ballot numbers are totally ordered, that is,
-for any two different ballot numbers, one is before or after the
-other. \emph{Do not confuse ballot numbers and slot numbers; they are
-orthogonal concepts}. One ballot can be used to decide multiple slots,
-and one slot may be targeted by multiple ballots.</p>
+$ballots$. Ballots are the key to liveness properties in Paxos. Each
+ballot has a unique $leader$. A leader can be working on arbitrarily
+many ballots, although it will be predominantly working on one at a
+time.  A leader process has a unique identifier called the $leader$
+$identifier$. Each ballot has a unique identifier, called its $ballot$
+$number$. Ballot numbers are totally ordered, that is, for any two
+different ballot numbers, one is before or after the other. <i>Do not
+confuse ballot numbers and slot numbers; they are orthogonal
+concepts</i>. One ballot can be used to decide multiple slots, and one
+slot may be targeted by multiple ballots.</p>
 
 <p>In this description, we will have ballot numbers be lexicographically
 ordered pairs of an integer and its leader identifier (consequently,
@@ -116,7 +115,7 @@ various types of processes in a setting where $f = 2$.</p>
 <h6>Acceptor State</h6>
 <p>An acceptor is quite simple, as it is passive and only sends messages
 in response to requests.  Its state consists of two variables.  Let a
-\emph{pvalue} be a triple consisting of a ballot number, a slot
+$pvalue$ be a triple consisting of a ballot number, a slot
 number, and a command. If $\alpha$ is the identifier of an acceptor,
 then the acceptor's state is described by
 
@@ -129,9 +128,9 @@ then the acceptor's state is described by
 acceptor can change. Let $p = \langle b, s, c \rangle$ be a pvalue
 consisting of a ballot number $b$, a slot number $s$, and a command
 $c$.  When an acceptor $\alpha$ adds $p$ to $\alpha.accepted$, we say that
-$\alpha$ \emph{accepts} $p$. An acceptor may accept the same pvalue
+$\alpha$ $accepts$ $p$. An acceptor may accept the same pvalue
 multiple times. When $\alpha$ sets its ballot number to $b$ for the
-first time, we say that $\alpha$ \emph{adopts} $b$.</p>
+first time, we say that $\alpha$ $adopts$ $b$.</p>
 
 <h6>Acceptor Invariants</h6>
 <p>Knowing these invariants is an

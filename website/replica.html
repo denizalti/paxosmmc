@@ -72,7 +72,6 @@
 <div id=main>
 
 <h1>How do Replicas work?</h1>
-<script type="tex/latex">
 <div class="latex">
 <p>When a client $\kappa$ wants to execute a command $c = \langle\kappa,
 \textit{cid}, \textit{op}\rangle$, its stub routine broadcasts a
@@ -80,13 +79,13 @@ $\langle\textbf{request}, c\rangle$ message to all replicas and waits for a
 $\langle\textbf{response}, \textit{cid}, \textit{result}\rangle$ message from
 one of the replicas.</p>
 
-<p>The replicas can be thought of as having a sequence of $\emph{slots}.
+<p>The replicas can be thought of as having a sequence of $slots$.
 that need to be filled with commands that make up the inputs to the
-state machine. Each slot is indexed by a \emph{slot number}.
+state machine. Each slot is indexed by a $slot$ $number$.
 Replicas receive requests from clients and assign them to specific
 slots, creating a sequence of commands. A replica, on receipt of a
 $\langle\textbf{request}, c\rangle$ message, proposes command $c$ for its
-lowest unused slot. We call the pair $(s, c)$ a \emph{proposal} for
+lowest unused slot. We call the pair $(s, c)$ a $proposal$ for
 slot $s$.</p>
 
 <p>Replicas use the Synod protocol to choose a single command for each
@@ -171,7 +170,7 @@ variables of replicas both before and after state transitions:
 <p>
 To understand the significance of such invariants, it is useful to
 consider what would happen if one of the invariants would not hold.
-If R1 would not hold, replicas could \emph{diverge}, ending up in
+If R1 would not hold, replicas could $diverge$, ending up in
 different states even if they have applied the same number of
 commands.  Also, without R1, the same replica could decide multiple
 different commands for the same slot, because $\rho_1$ and $\rho_2$
@@ -322,9 +321,9 @@ R5</b> holds.</p>
 
 <p>The real difficulty lies in enforcing <b>Invariant R1</b>.  It requires
 that the set of replicas agree on the order of commands.  For each
-slot, the Paxos protocol \emph{chooses} a command from among a
+slot, the Paxos protocol $chooses$ a command from among a
 collection of commands proposed by clients.  This is called
-\emph{consensus}, and in Paxos the subprotocol that implements
+$consensus$, and in Paxos the subprotocol that implements
 consensus is called the ``multi-decree Synod'' protocol, or just Synod
 protocol for short.</p>
 

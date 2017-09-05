@@ -73,12 +73,11 @@
 
 <h1>When does Paxos work?</h1>
 <center><b>a.k.a. what about the impossibility of consensus result?</b></center>
-<script type="tex/latex">
 <div class="latex">
 
 <p>It would clearly be desirable that, if a client broadcasts a new
 command to all replicas, that it eventually receives at least one
-response. This is an example of a \emph{liveness} property. It
+response. This is an example of a $liveness$ property. It
 requires that if one or more commands have been proposed for a
 particular slot, that some command is eventually decided for that
 slot. Unfortunately, the Synod protocol as described does not
@@ -146,7 +145,7 @@ as ${\lambda'}$ responds timely to pings, $\lambda$ waits
 patiently. Only if ${\lambda'}$ stops responding will $\lambda$ select
 a higher ballot number and start a scout.</p>
 
-<p>This concept is called \emph{failure detection}, and theoreticians
+<p>This concept is called $failure$ $detection$, and theoreticians
 have been interested in the weakest properties failure detection
 should have in order to support a consensus algorithm that is
 guaranteed to terminate. In a purely asynchronous
