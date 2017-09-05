@@ -299,13 +299,11 @@ $\textit{slot_out}$.</p>
 
 <h6>Maintenance of Replica Invariants</h6>
 
-<p>Note that both $\textit{proposals}$ and $\textit{decisions}$ are
-``append-only'' in that there is no code that removes entries from
-these sets. Doing so makes it easier to formulate invariants and
-reason about the correctness of the code. We will discuss
-correctness-preserving ways of removing entries that are no longer
-useful in the context of optimizations later.
-</p>
+<p>Note that $\textit{decisions}$ is ``append-only'' in that there is no code
+that removes entries from this set. Doing so makes it easier to formulate
+invariants and reason about the correctness of the code. We will discuss
+correctness-preserving ways of removing entries that are no longer useful in
+the context of optimizations later.</p>
 
 <p>It is clear that the code enforces <b>Invariant R4</b>.  The variables
 $\textit{state}$ and $\textit{slot_out}$ are updated atomically in
