@@ -280,7 +280,7 @@ three types of messages that cause transitions:
 <li> $\langle \textbf{adopted}, ballot\_num, \textit{pvals} \rangle$: Sent by
   a scout, this message signifies that the current ballot number $ballot\_num$
   has been adopted by a majority of acceptors. If an
-  \textbf{adopted} message arrives for an old ballot number, it is
+  $\textbf{adopted}$ message arrives for an old ballot number, it is
   ignored. The set $\textit{pvals}$ contains all pvalues accepted by
   these acceptors prior to $ballot\_num$.</li>
 <li> $\langle \textbf{preempted}, \langle r', {\lambda'} \rangle
@@ -374,8 +374,8 @@ maximum pvalue in $\textit{pvals}$, if any. Now the leader can start
 commanders for each slot while satisfying Invariant L2.</p>
 
 <p>If a new proposal arrives while the leader is active, the leader
-checks to see if it already has a proposal for the same slot (and has
-thus spawned a commander for that slot) in its set \textit{proposals}.
+checks to see if it already has a proposal for the same slot $($and has
+thus spawned a commander for that slot$)$ in its set $\textit{proposals}$.
 If not, the new proposal will satisfy Invariant L2, and thus the
 leader adds the proposal to $\textit{proposals}$ and spawns a
 commander.</p>
