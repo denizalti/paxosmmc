@@ -47,11 +47,11 @@ class Leader(Process):
           self.active = True
       elif isinstance(msg, PreemptedMessage):
         if msg.ballot_number > self.ballot_number:
+          self.active = False
           self.ballot_number = BallotNumber(msg.ballot_number.round+1,
                                             self.id)
           Scout(self.env, "scout:%s:%s" % (str(self.id),
                                            str(self.ballot_number)),
                 self.id, self.config.acceptors, self.ballot_number)
-        self.active = False
       else:
         print "Leader: unknown msg type"
