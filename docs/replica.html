@@ -89,10 +89,12 @@ lowest unused slot. We call the pair $(s, c)$ a $proposal$ for
 slot $s$.</p>
 
 <p>Replicas use the Synod protocol to choose a single command for each
-slot from the proposals they make. For each slot, the Synod protocol
-runs between a set of processes called the configuration of the
-slot. The configuration contains the leaders and the acceptors, but
-not the replicas. Leaders receive proposed commands from replicas and
+slot from the proposals they make. For each slot, a set of processes performs 
+the Synod protocol to decide which command should be placed in that particular 
+slot. A particular set of processes that are associated with a slot are commonly 
+refered to as the configuration of that slot. The configuration of a slot 
+contains the leader processes and acceptor processes, but not the 
+replica processes. Leaders receive proposed commands from replicas and
 are responsible for choosing a single command for the slot. Thus, in
 order to tolerate $~f$ crash failures, Paxos needs at least $f + 1$
 leaders, always leaving at least $1$ leader to order the commands
