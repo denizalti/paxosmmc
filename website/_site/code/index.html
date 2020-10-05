@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>Code | Paxos Made Moderately Complex</title>
+<meta name="generator" content="Jekyll v4.1.1" />
+<meta property="og:title" content="Code" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Explains the Paxos Consensus Protocol in an easy to understand way. Provides a working implementation in Python." />
+<meta property="og:description" content="Explains the Paxos Consensus Protocol in an easy to understand way. Provides a working implementation in Python." />
+<link rel="canonical" href="http://localhost:4000/code/" />
+<meta property="og:url" content="http://localhost:4000/code/" />
+<meta property="og:site_name" content="Paxos Made Moderately Complex" />
+<script type="application/ld+json">
+{"description":"Explains the Paxos Consensus Protocol in an easy to understand way. Provides a working implementation in Python.","@type":"WebPage","headline":"Code","url":"http://localhost:4000/code/","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Paxos Made Moderately Complex" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Paxos Made Moderately Complex</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/how/">Paxos</a><a class="page-link" href="/paper/">Paper</a><a class="page-link" href="/code/">Code</a><a class="page-link" href="/glossary/">Glossary</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post">
+
+  <header class="post-header">
+    <h1 class="post-title">Code</h1>
+  </header>
+
+  <div class="post-content">
+    <p>The Python source code corresponding to the pseudo-code we present in this website is available in the following <a href="https://github.com/denizalti/paxosmmc">git repository</a>:</p>
+
+<pre>https://github.com/denizalti/paxosmmc</pre>
+
+<p>You can clone the repo as follows:</p>
+<pre><code>$ git clone https://github.com/denizalti/paxosmmc.git
+</code></pre>
+
+<p>The source code includes the Replica, Acceptor, Commander, Scout and Leader codes as well as Utilities, Message, Process and Environment codes that implement the functionality to run the processes.</p>
+
+<h1 id="replica">Replica</h1>
+
+<p>A replica runs in an infinite loop, receiving messages. Replicas receive two kinds of messages: requests and decisions. When it receives a request for command c from a client, the replica adds the request to set requests. Next, the replica invokes the function <span style="font-family:Courier New">propose()</span>.</p>
+
+<p>Function <span style="font-family:Courier New">propose()</span> tries to transfer requests from the set <span style="font-family:Courier New">requests</span> to <span style="font-family:Courier New">proposals</span>. It uses <span style="font-family:Courier New">slot_in</span> to look for unused slots within the window of slots with known configurations. For each such slot s, it first checks if the configuration for s is different from the prior slot by checking if the decision in slot <span style="font-family:Courier New">s−WINDOW</span> is a reconfiguration command. If so, the function updates the set of leaders for slot s. Then the function removes a request r from requests and adds proposal (s,r) to the set proposals. Finally, it sends a ⟨propose, s, c⟩ message to all leaders in the configuration of slot s.</p>
+
+<p>Decisions may arrive out-of-order and multiple times. For each decision message, the replica adds the decision to the set decisions. Then, in a loop, it considers which decisions are ready for execution before trying to receive more messages. If there is a decision c’ corresponding to the current slot_out, the replica first checks to see if it has proposed a command c’’ for that slot. If so, the replica removes ⟨<span style="font-family:Courier New">slot_out</span>,c’‘⟩ from the set proposals. If c’‘≠ c’, that is, the replica proposed a different command for that slot, the replica returns c’’ to set requests so c’’ is proposed again at a later time. Next, the replica invokes <span style="font-family:Courier New">perform(</span>c’<span style="font-family:Courier New">)</span>.</p>
+
+<p>The function <span style="font-family:Courier New">perform()</span> is invoked with the same sequence of commands at all replicas. First, it checks to see if it has already performed the command. Different replicas may end up proposing the same command for different slots, and thus the same command may be decided multiple times. The corresponding operation is evaluated only if the command is new and it is not a reconfiguration request. If so, <span style="font-family:Courier New">perform()</span> applies the requested operation to the application state. In either case, the function increments <span style="font-family:Courier New">slot_out</span>.</p>
+
+<pre><code>from process import Process
+from message import ProposeMessage,DecisionMessage,RequestMessage
+from utils import *
+import time
+
+class Replica(Process):
+  def __init__(self, env, id, config):
+    Process.__init__(self, env, id)
+    self.slot_in = self.slot_out = 1
+    self.proposals = {}
+    self.decisions = {}
+    self.requests = []
+    self.config = config
+    self.env.addProc(self)
+
+  def propose(self):
+    while len(self.requests) != 0 and self.slot_in &lt; self.slot_out+WINDOW:
+      if self.slot_in &gt; WINDOW and self.slot_in-WINDOW in self.decisions:
+        if isinstance(self.decisions[self.slot_in-WINDOW],ReconfigCommand):
+          r,a,l = self.decisions[self.slot_in-WINDOW].config.split(';')
+          self.config = Config(r.split(','),a.split(','),l.split(','))
+          print self.id, ": new config:", self.config
+      if self.slot_in not in self.decisions:
+        cmd = self.requests.pop(0)
+        self.proposals[self.slot_in] = cmd
+        for ldr in self.config.leaders:
+          self.sendMessage(ldr, ProposeMessage(self.id,self.slot_in,cmd))
+      self.slot_in +=1
+
+  def perform(self, cmd):
+    for s in range(1, self.slot_out):
+      if self.decisions[s] == cmd:
+        self.slot_out += 1
+        return
+    if isinstance(cmd, ReconfigCommand):
+      self.slot_out += 1
+      return
+    print self.id, ": perform",self.slot_out, ":", cmd
+    self.slot_out += 1
+
+  def body(self):
+    print "Here I am: ", self.id
+    while True:
+      msg = self.getNextMessage()
+      if isinstance(msg, RequestMessage):
+        self.requests.append(msg.command)
+      elif isinstance(msg, DecisionMessage):
+        self.decisions[msg.slot_number] = msg.command
+        while self.slot_out in self.decisions:
+          if self.slot_out in self.proposals:
+            if self.proposals[self.slot_out]!=self.decisions[self.slot_out]:
+              self.requests.append(self.proposals[self.slot_out])
+            del self.proposals[self.slot_out]
+          self.perform(self.decisions[self.slot_out])
+      else:
+        print "Replica: unknown msg type"
+      self.propose()
+</code></pre>
+
+<h1 id="acceptor">Acceptor</h1>
+<p>An <strong>acceptor</strong> runs in an infinite loop, receiving two kinds of request messages from leaders:</p>
+
+<ul>
+  <li>
+    <p><strong>P1aMessage</strong>: Upon receiving a “Phase 1a” request message from a leader for a ballot number, an acceptor makes the following transition. First, the acceptor adopts <span style="font-family:Courier New">msg.ballot_number</span> if and only if it exceeds its current ballot number. Then it returns to the leader a “Phase 1b” response message containing its current ballot number and all pvalues accepted thus far by the acceptor.</p>
+  </li>
+  <li>
+    <p><strong>P2aMessage</strong>: Upon receiving a “Phase 2a” request message from a leader with a pvalue, an acceptor makes the following transition. If <span style="font-family:Courier New">msg.ballot_number</span> equals the current ballot number, then the acceptor accepts the pvalue. The acceptor returns to the leader a “Phase 2b” response message containing its current ballot number.</p>
+  </li>
+</ul>
+
+<pre><code>from utils import PValue
+from process import Process
+from message import P1aMessage, P1bMessage, P2aMessage, P2bMessage
+
+class Acceptor(Process):
+  def __init__(self, env, id):
+    Process.__init__(self, env, id)
+    self.ballot_number = None
+    self.accepted = set()
+    self.env.addProc(self)
+
+  def body(self):
+    print "Here I am: ", self.id
+    while True:
+      msg = self.getNextMessage()
+      if isinstance(msg, P1aMessage):
+        if msg.ballot_number &gt; self.ballot_number:
+          self.ballot_number = msg.ballot_number
+        self.sendMessage(msg.src,
+                         P1bMessage(self.id,
+                                    self.ballot_number,
+                                    self.accepted))
+      elif isinstance(msg, P2aMessage):
+        if msg.ballot_number == self.ballot_number:
+          self.accepted.add(PValue(msg.ballot_number,
+                                   msg.slot_number,
+                                   msg.command))
+        self.sendMessage(msg.src,
+                         P2bMessage(self.id,
+                                    self.ballot_number,
+                                    msg.slot_number))
+</code></pre>
+
+<h1 id="scout">Scout</h1>
+<p>Scouts send and track the P1a and P1b messages, handling the first part of
+a round.</p>
+
+<pre><code>from process import Process
+from message import P1aMessage, P1bMessage, PreemptedMessage, AdoptedMessage
+
+class Scout(Process):
+  def __init__(self, env, id, leader, acceptors, ballot_number):
+    Process.__init__(self, env, id)
+    self.leader = leader
+    self.acceptors = acceptors
+    self.ballot_number = ballot_number
+    self.env.addProc(self)
+
+  def body(self):
+    waitfor = set()
+    for a in self.acceptors:
+      self.sendMessage(a, P1aMessage(self.id, self.ballot_number))
+      waitfor.add(a)
+
+    pvalues = set()
+    while True:
+      msg = self.getNextMessage()
+      if isinstance(msg, P1bMessage):
+        if self.ballot_number == msg.ballot_number and msg.src in waitfor:
+          pvalues.update(msg.accepted)
+          waitfor.remove(msg.src)
+          if len(waitfor) &lt; float(len(self.acceptors))/2:
+            self.sendMessage(self.leader,
+                             AdoptedMessage(self.id,
+                                            self.ballot_number,
+                                            pvalues))
+            return
+        else:
+          self.sendMessage(self.leader,
+                           PreemptedMessage(self.id,
+                                            msg.ballot_number))
+          return
+      else:
+        print "Scout: unexpected msg"
+</code></pre>
+
+<h1 id="commander">Commander</h1>
+<p>Commanders send and track the P2a and P2b messages, handling the first part of
+a round.</p>
+
+<p>from message import P2aMessage, P2bMessage, PreemptedMessage, DecisionMessage
+from process import Process
+from utils import Command</p>
+
+<pre><code>
+class Commander(Process):
+  def __init__(self, env, id, leader, acceptors, replicas,
+               ballot_number, slot_number, command):
+    Process.__init__(self, env, id)
+    self.leader = leader
+    self.acceptors = acceptors
+    self.replicas = replicas
+    self.ballot_number = ballot_number
+    self.slot_number = slot_number
+    self.command = command
+    self.env.addProc(self)
+
+  def body(self):
+    waitfor = set()
+    for a in self.acceptors:
+      self.sendMessage(a, P2aMessage(self.id, self.ballot_number,
+                                     self.slot_number, self.command))
+      waitfor.add(a)
+
+    while True:
+      msg = self.getNextMessage()
+      if isinstance(msg, P2bMessage):
+        if self.ballot_number == msg.ballot_number and msg.src in waitfor:
+          waitfor.remove(msg.src)
+          if len(waitfor) &lt; float(len(self.acceptors))/2:
+            for r in self.replicas:
+              self.sendMessage(r, DecisionMessage(self.id,
+                                                  self.slot_number,
+                                                  self.command))
+            return
+        else:
+          self.sendMessage(self.leader, PreemptedMessage(self.id, msg.ballot_number))
+          return
+</code></pre>
+
+<h1 id="leader">Leader</h1>
+<p>The Leader code is executed by the Replica that becomes the leader for a given
+round after the P1 and P2 rounds are completed successfully.</p>
+
+<pre><code>from utils import BallotNumber
+from process import Process
+from commander import Commander
+from scout import Scout
+from message import ProposeMessage,AdoptedMessage,PreemptedMessage
+
+class Leader(Process):
+  def __init__(self, env, id, config):
+    Process.__init__(self, env, id)
+    self.ballot_number = BallotNumber(0, self.id)
+    self.active = False
+    self.proposals = {}
+    self.config = config
+    self.env.addProc(self)
+
+  def body(self):
+    print "Here I am: ", self.id
+    Scout(self.env, "scout:%s:%s" % (str(self.id), str(self.ballot_number)),
+          self.id, self.config.acceptors, self.ballot_number)
+    while True:
+      msg = self.getNextMessage()
+      if isinstance(msg, ProposeMessage):
+        if msg.slot_number not in self.proposals:
+          self.proposals[msg.slot_number] = msg.command
+          if self.active:
+            Commander(self.env,
+                      "commander:%s:%s:%s" % (str(self.id),
+                                              str(self.ballot_number),
+                                              str(msg.slot_number)),
+                      self.id, self.config.acceptors, self.config.replicas,
+                      self.ballot_number, msg.slot_number, msg.command)
+
+      elif isinstance(msg, AdoptedMessage):
+        if self.ballot_number == msg.ballot_number:
+          pmax = {}
+          for pv in msg.accepted:
+            if pv.slot_number not in pmax or \
+                  pmax[pv.slot_number] &lt; pv.ballot_number:
+              pmax[pv.slot_number] = pv.ballot_number
+              self.proposals[pv.slot_number] = pv.command
+          for sn in self.proposals:
+            Commander(self.env,
+                      "commander:%s:%s:%s" % (str(self.id),
+                                              str(self.ballot_number),
+                                              str(sn)),
+                      self.id, self.config.acceptors, self.config.replicas,
+                      self.ballot_number, sn, self.proposals.get(sn))
+          self.active = True
+      elif isinstance(msg, PreemptedMessage):
+        if msg.ballot_number &gt; self.ballot_number:
+          self.ballot_number = BallotNumber(msg.ballot_number.round+1,
+                                            self.id)
+          Scout(self.env, "scout:%s:%s" % (str(self.id),
+                                           str(self.ballot_number)),
+                self.id, self.config.acceptors, self.ballot_number)
+        self.active = False
+      else:
+        print "Leader: unknown msg type"
+</code></pre>
+
+<h1 id="environment">Environment</h1>
+<p>This is the main code in which all processes are created and run. This code also simulates a set of clients submitting requests.</p>
+
+<pre><code>import os, signal, sys, time
+from acceptor import Acceptor
+from leader import Leader
+from message import RequestMessage
+from process import Process
+from replica import Replica
+from utils import *
+
+NACCEPTORS = 3
+NREPLICAS = 2
+NLEADERS = 2
+NREQUESTS = 10
+NCONFIGS = 2
+
+class Env:
+  def __init__(self):
+    self.procs = {}
+
+  def sendMessage(self, dst, msg):
+    if dst in self.procs:
+      self.procs[dst].deliver(msg)
+
+  def addProc(self, proc):
+    self.procs[proc.id] = proc
+    proc.start()
+
+  def removeProc(self, pid):
+    del self.procs[pid]
+
+  def run(self):
+    initialconfig = Config([], [], [])
+    c = 0
+
+    for i in range(NREPLICAS):
+      pid = "replica: %d" % i
+      Replica(self, pid, initialconfig)
+      initialconfig.replicas.append(pid)
+    for i in range(NACCEPTORS):
+      pid = "acceptor: %d.%d" % (c,i)
+      Acceptor(self, pid)
+      initialconfig.acceptors.append(pid)
+    for i in range(NLEADERS):
+      pid = "leader: %d.%d" % (c,i)
+      Leader(self, pid, initialconfig)
+      initialconfig.leaders.append(pid)
+    for i in r in initialconfig.replicas:
+        cmd = Command(pid,0,"operation %d.%d" %.sleep(1)
+
+    for c in range(1, NCONFIGS):
+      # Create new configuration
+      config = Config(initialconfig.replicas, [], [])
+      for i in range(NACCEPTORS):
+        pid = "acceptor: %d.%d" % (c,i)
+        Acceptor(self, pid)
+        config.acceptors.append(pid)
+      for i in range(NLEADERS):
+        pid = "leader: %d.%d" % (c,i)
+        Leader(self, pid, config)
+        config.leaders.append(pid)
+      # Send reconfiguration request
+      for r in config.replicas:
+        pid = "master: %d.%d" % (c,i)
+        cmd = ReconfigCommand(pid,0,str(config))
+        self.sendMessage(r, RequestMessage(pid, cmd))
+        time.sleep(1)
+      for i in range(WINDOW-1):
+        pid = "master: %d.%d" % (c,i)
+        for r in config.replicas:
+          cmd = Command(pid,0,"operation noop")
+          self.sendMessage(r, RequestMessage(pid, cmd))
+          time.sleep(1)
+      for i in range(NREQUESTS):
+        pid = "client: %d.%d" % (c,i)
+        for r inconfig.replicas:
+          cmd = Command(pid,0,(1)
+
+  def terminate_handler(self, signal, frame):
+    self._graceexit()
+
+  def _graceexit(self, exitcode=0):
+    sys.stdout.flush()
+    sys.stderr.flush()
+    os._exit(exitcode)
+
+def main():
+  e = Env()
+  e.run()
+  signal.signal(signal.SIGINT, e.terminate_handler)
+  signal.signal(signal.SIGTERM, e.terminate_handler)
+  signal.pause()
+
+if __name__=='__main__':
+  main()
+</code></pre>
+
+<h1 id="process">Process</h1>
+<p>A process is a thread with a process identifier, a queue of incoming messages, and an “environment” that keeps track of all processes and queues.</p>
+
+<pre><code>import multiprocessing
+from threading import Thread
+
+class Process(Thread):
+  def __init__(self, env, id):
+    super(Process, self).__init__()
+    self.inbox = multiprocessing.Manager().Queue()
+    self.env = env
+    self.id = id
+
+  def run(self):
+    try:
+      self.body()
+      self.env.removeProc(self.id)
+    except EOFError:
+      print "Exiting.."
+
+  def getNextMessage(self):
+    return self.inbox.get()
+
+  def sendMessage(self, dst, msg):
+    self.env.sendMessage(dst, msg)
+
+  def deliver(self, msg):
+    self.inbox.put(msg)
+</code></pre>
+
+<p>#Message
+Paxos uses a large variety of message types. They are collected below.</p>
+
+<pre><code>class Message:
+  def __init__(self, src):
+    self.src = src
+
+  def __str__(self):
+    return str(self.__dict__)
+
+class P1aMessage(Message):
+  def __init__(self, src, ballot_number):
+    Message.__init__(self, src)
+    self.ballot_number = ballot_number
+
+class P1bMessage(Message):
+  def __init__(self, src, ballot_number, accepted):
+    Message.__init__(self, src)
+    self.ballot_number = ballot_number
+    self.accepted = accepted
+
+class P2aMessage(Message):
+  def __init__(self, src, ballot_number, slot_number, command):
+    Message.__init__(self, src)
+    self.ballot_number = ballot_number
+    self.slot_number = slot_number
+    self.command = command
+
+class P2bMessage(Message):
+  def __init__(self, src, ballot_number, slot_number):
+    Message.__init__(self, src)
+    self.ballot_number = ballot_number
+    self.slot_number = slot_number
+
+class PreemptedMessage(Message):
+  def __init__(self, src, ballot_number):
+    Message.__init__(self, src)
+    self.ballot_number = ballot_number
+
+class AdoptedMessage(Message):
+  def __init__(self, src, ballot_number, accepted):
+    Message.__init__(self, src)
+    self.ballot_number = ballot_number
+    self.accepted = accepted
+
+class DecisionMessage(= slot_number
+    self.command = command
+
+class RequestMessage(Message):
+  def __init__(self, src, command):
+    Message.__init__(self, src)
+    self.command = command
+
+class ProposeMessage(Message):
+  def __init__(self, src, slot_number, command):
+    Message.__init__(self, src)
+    self.slot_number = slot_number
+    self.command = command
+</code></pre>
+
+<h1 id="utilities">Utilities</h1>
+<p>A ballot number is a lexicographically ordered pair of an integer and the identifier of the ballot’s leader.
+A pvalue consists of a ballot number, a slot number, and a command.
+A command consists of the process identifier of the client submitting the request, a client-local request identifier, and an operation (which can be anything).
+A reconfiguration command consists of the process identifier of the client submitting the request, a client-local request identifier, and a configuration.
+A configuration consists of a list of replicas, a list of acceptors and a list of leaders.</p>
+
+<pre><code>from collections import namedtuple
+
+WINDOW = 5
+
+class BallotNumber(namedtuple('BallotNumber',['round','leader_id'])):
+  __slots__ = ()
+  def __str__(self):
+    return "BN(%d,%s)" % (self.round, str(self.leader_id))
+
+class PValue(namedtuple('PValue',['ballot_number','slot_number','command'])):
+  __slots__ = ()
+  def __str__(self):
+    return "PV(%s,%s,%s)" % (str(self.ballot_number),
+                             str(self.slot_number),
+                             str(self.command))
+
+class Command(namedtuple('Command',['client','req_id','op'])):
+  __slots__ = ()
+  def __str__(self):
+    return "Command(%s,%s,%s)" % (str(self.client),
+                                  str(self.req_id),
+                                  str(self.op))
+
+class ReconfigCommand(namedtuple('ReconfigCommand',['client','req_id','config'])):
+  __slots__ = ()
+  def __str__(self):
+    return "ReconfigCommand(%s,%s,%s)" % (str(self.client),
+                                          str(self.req_id),
+                                          str(self.config))
+
+class Config(namedtuple('Config',['replicas','acceptors','leaders'])):
+  __slots__ = ()
+  def __str__(self):
+    return "%s;%s;self.leaders))
+</code></pre>
+
+  </div>
+
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Paxos Made Moderately Complex</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Paxos Made Moderately Complex</li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/denizalti"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">denizalti</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>Explains the Paxos Consensus Protocol in an easy to understand way. Provides a working implementation in Python.</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>
