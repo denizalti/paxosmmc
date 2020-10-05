@@ -23,7 +23,7 @@ permalink: /glossary/
 
 <a name="ft"></a> **Fault Tolerance:** See [Reliability](#reliability).
 
-<a name="flp"></a> **FLP Impossibility Result:** "Consensus problem is not solvable in an asynchronous system." The result has been established by Fischer-Lynch-Paterson, hence the name FLP. The result states that there exists no deterministic algorithm that solves [consensus](#consensus) in an [asynchronous](#asynchronous) environment with reliable channels if one single process may [crash](#cf). This is due to the fact that in an asynchronous environment it is impossible to detect if a process has crashed or is very very slow. The basic idea behind the proof presented in the [FLP paper](http://groups.csail.mit.edu/tds/papers/Lynch/pods83-flp.pdf) is to show circumstances under which the protocol remains forever indecisive.
+<a name="flp"></a> **FLP Impossibility Result:** "Consensus problem is not solvable in an asynchronous system." The result has been established by Fischer-Lynch-Paterson, hence the name FLP. The result states that there exists no deterministic algorithm that solves [consensus](#consensus) in an [asynchronous](#asynchronous) environment with reliable channels if one single process may [crash](#cf). This is due to the fact that in an asynchronous environment it is impossible to detect if a process has crashed or is very very slow. The basic idea behind the proof presented in the [FLP paper](httpss://groups.csail.mit.edu/tds/papers/Lynch/pods83-flp.pdf) is to show circumstances under which the protocol remains forever indecisive.
 
 <a name="quorum"></a> **Majority:** See [Quorum](#quorum).
 
@@ -45,22 +45,22 @@ permalink: /glossary/
 
 ## References
 
--   [Paxos Wikipedia Page](http://en.wikipedia.org/wiki/Paxos_(computer_science))
+-   [Paxos Wikipedia Page](https://en.wikipedia.org/wiki/Paxos_(computer_science))
 
--   [Leslie Lamport. 1978. Time, Clocks, and the Ordering of Events in a Distributed System. Commun. ACM 21, 7 (July 1978), 558--565.](http://research.microsoft.com/en-us/um/people/lamport/pubs/time-clocks.pdf)
--   [Richard D. Schlichting and Fred B. Schneider. 1983. Fail-stop Processors: An Approach to Designing Fault-tolerant Computing Systems. ACM Transactions on Computer Systems 1, 3 (Aug. 1983), 222--238.](https://www.cs.cornell.edu/fbs/publications/Fail_Stop.pdf)
--   [Fred B. Schneider. 1990. Implementing Fault-tolerant Services Using the State Machine Approach: A Tutorial. Comput. Surveys 22, 4 (Dec. 1990), 299--319.](https://www.cs.cornell.edu/fbs/publications/SMSurvey.pdf)
--   [Leslie Lamport. 1998. The Part-time Parliament. ACM Transactions on Computer Systems 16, 2 (May 1998), 133--169.](http://research.microsoft.com/en-us/um/people/lamport/pubs/lamport-paxos.pdf)
-[](http://research.microsoft.com/en-us/um/people/lamport/pubs/lamport-paxos.pdf)
--   [](http://research.microsoft.com/en-us/um/people/lamport/pubs/lamport-paxos.pdf)[Roberto De Prisco, Butler W. Lampson, and Nancy Lynch. 2000. Revisiting the PAXOS Algorithm. Theoretical Computer Science 243, 1-2 (July 2000), 35--91.](http://research.microsoft.com/en-us/um/people/blampson/60-PaxosAlgorithm/Acrobat.pdf)
--   [Leslie Lamport. 2001. Paxos Made Simple. ACM SIGACT News (Distributed Computing Column) 32, 4 (2001), 51--58.](http://research.microsoft.com/en-us/um/people/lamport/pubs/paxos-simple.pdf)
--   [Butler W. Lampson. 2001. The ABCD's of Paxos. In Proceedings of the Twentieth Annual ACM Symposium on Principles of Distributed Computing (PODC '01). ACM, New York, NY, 13--14.](http://research.microsoft.com/en-us/um/people/blampson/65-ABCDPaxos/Acrobat.pdf)
--   [Eli Gafni and Leslie Lamport. 2003. Disk Paxos. Distributed Computing 16, 1 (Feb. 2003), 1--20.](http://dl.acm.org/citation.cfm?id=1061989)
--   [Leslie Lamport and Mike Massa. 2004. Cheap Paxos. In Proceedings of the 2004 International Conference on Dependable Systems and Networks (DSN '04). IEEE Computer Society, Washington, DC, 307--315.](http://research.microsoft.com/pubs/64634/web-dsn-submission.pdf?q=cheap)
--   [Leslie Lamport. 2005. Generalized Consensus and Paxos. Technical Report MSR-TR-2005-33. Microsoft Research, Mountain View, CA.](http://research.microsoft.com/pubs/64631/tr-2005-33.pdf)
--   [Leslie Lamport. 2006. Fast Paxos. Distributed Computing 19, 2 (October 2006), 79--103.](http://research.microsoft.com/pubs/64624/tr-2005-112.pdf)
--   [Leslie Lamport, Dahlia Malkhi, and Lidong Zhou. 2008. Stoppable Paxos. Technical Report. Microsoft Research, Mountain View, CA.](http://research.microsoft.com/apps/pubs/default.aspx?id=101826)
--   [Leslie Lamport, Dahlia Malkhi, and Lidong Zhou. 2009. Vertical Paxos and Primary-Backup Replication. In Proceedings of the Twenty-Eighth ACM Symposium on Principles of Distributed Computing (PODC '09). ACM, New York, NY, 312--313.](http://research.microsoft.com/pubs/80907/podc09v6.pdf)
+-   [Leslie Lamport. 1978. Time, Clocks, and the Ordering of Events in a Distributed System. Commun. ACM 21, 7 (July 1978), 558--565.](https://research.microsoft.com/en-us/um/people/lamport/pubs/time-clocks.pdf)
+-   [Richard D. Schlichting and Fred B. Schneider. 1983. Fail-stop Processors: An Approach to Designing Fault-tolerant Computing Systems. ACM Transactions on Computer Systems 1, 3 (Aug. 1983), 222--238.](httpss://www.cs.cornell.edu/fbs/publications/Fail_Stop.pdf)
+-   [Fred B. Schneider. 1990. Implementing Fault-tolerant Services Using the State Machine Approach: A Tutorial. Comput. Surveys 22, 4 (Dec. 1990), 299--319.](httpss://www.cs.cornell.edu/fbs/publications/SMSurvey.pdf)
+-   [Leslie Lamport. 1998. The Part-time Parliament. ACM Transactions on Computer Systems 16, 2 (May 1998), 133--169.](https://research.microsoft.com/en-us/um/people/lamport/pubs/lamport-paxos.pdf)
+[](https://research.microsoft.com/en-us/um/people/lamport/pubs/lamport-paxos.pdf)
+-   [](https://research.microsoft.com/en-us/um/people/lamport/pubs/lamport-paxos.pdf)[Roberto De Prisco, Butler W. Lampson, and Nancy Lynch. 2000. Revisiting the PAXOS Algorithm. Theoretical Computer Science 243, 1-2 (July 2000), 35--91.](https://research.microsoft.com/en-us/um/people/blampson/60-PaxosAlgorithm/Acrobat.pdf)
+-   [Leslie Lamport. 2001. Paxos Made Simple. ACM SIGACT News (Distributed Computing Column) 32, 4 (2001), 51--58.](https://research.microsoft.com/en-us/um/people/lamport/pubs/paxos-simple.pdf)
+-   [Butler W. Lampson. 2001. The ABCD's of Paxos. In Proceedings of the Twentieth Annual ACM Symposium on Principles of Distributed Computing (PODC '01). ACM, New York, NY, 13--14.](https://research.microsoft.com/en-us/um/people/blampson/65-ABCDPaxos/Acrobat.pdf)
+-   [Eli Gafni and Leslie Lamport. 2003. Disk Paxos. Distributed Computing 16, 1 (Feb. 2003), 1--20.](https://dl.acm.org/citation.cfm?id=1061989)
+-   [Leslie Lamport and Mike Massa. 2004. Cheap Paxos. In Proceedings of the 2004 International Conference on Dependable Systems and Networks (DSN '04). IEEE Computer Society, Washington, DC, 307--315.](https://research.microsoft.com/pubs/64634/web-dsn-submission.pdf?q=cheap)
+-   [Leslie Lamport. 2005. Generalized Consensus and Paxos. Technical Report MSR-TR-2005-33. Microsoft Research, Mountain View, CA.](https://research.microsoft.com/pubs/64631/tr-2005-33.pdf)
+-   [Leslie Lamport. 2006. Fast Paxos. Distributed Computing 19, 2 (October 2006), 79--103.](https://research.microsoft.com/pubs/64624/tr-2005-112.pdf)
+-   [Leslie Lamport, Dahlia Malkhi, and Lidong Zhou. 2008. Stoppable Paxos. Technical Report. Microsoft Research, Mountain View, CA.](https://research.microsoft.com/apps/pubs/default.aspx?id=101826)
+-   [Leslie Lamport, Dahlia Malkhi, and Lidong Zhou. 2009. Vertical Paxos and Primary-Backup Replication. In Proceedings of the Twenty-Eighth ACM Symposium on Principles of Distributed Computing (PODC '09). ACM, New York, NY, 312--313.](https://research.microsoft.com/pubs/80907/podc09v6.pdf)
 
 Note that this is an incomplete list. For more references, you can refer to the
 [Paxos Made Moderately Complex](/paper/) paper.

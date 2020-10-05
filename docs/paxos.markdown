@@ -10,7 +10,7 @@ permalink: /how/
 <a name="why"></a>
 ## Why is Paxos used in distributed systems?
 
-[**Paxos**](http://research.microsoft.com/en-us/um/people/lamport/pubs/lamport-paxos.pdf) is a protocol for state machine replication in an asynchronous environment that admits crash failures.
+[**Paxos**](https://research.microsoft.com/en-us/um/people/lamport/pubs/lamport-paxos.pdf) is a protocol for state machine replication in an asynchronous environment that admits crash failures.
 
 A replicated state machine works by having multiple state machines, also called replicas, working in parallel, maintaining the same state. When the replicas receive requests from a client they update their state by executing the command in the request and reply to the client. This way, the state is automatically replicated by the replicas and in the event of a failure the state does not get lost, making the replicated state machine reliable.
 

@@ -2,7 +2,6 @@
 layout: page
 permalink: /how/
 ---
-
 Paxos uses servers that have different roles in the execution of the protocol.
 The execution logic, and the insights behind the correctness of the protocol
 is covered here for each role.

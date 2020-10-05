@@ -14,7 +14,7 @@ email:
 description: >- # this means to ignore newlines until "baseurl:"
   Explains the Paxos Consensus Protocol in an easy to understand way. Provides a working implementation in Python.
 baseurl: ""
-url: "http://paxos.systems" # the base hostname & protocol for your site, e.g. http://example.com
+url: "https://paxos.systems" # the base hostname & protocol for your site, e.g. http://example.com
 address: paxos.systems
 paper_path: ../static/PaxosMMCAltinbukenVanRenesse.pdf
 bibtex_path: ../static/paxosmmc.bib

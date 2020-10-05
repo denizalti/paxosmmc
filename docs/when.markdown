@@ -3,8 +3,7 @@ layout: page
 permalink: /when/
 ---
 
-When does Paxos work? a.k.a. what about the impossibility of consensus result?
-==============
+## When does Paxos work? a.k.a. what about the impossibility of consensus result?
 
 It would clearly be desirable that, if a client broadcasts a new command to all replicas, that it eventually receives at least one response. This is an example of a liveness property. It requires that if one or more commands have been proposed for a particular slot, that some command is eventually decided for that slot. Unfortunately, the Synod protocol as described does not guarantee this, even in the absence of any failure whatsoever. In fact, failures tend to be good for liveness. If all leaders but one fail, Paxos is guaranteed to terminate.
 
@@ -32,6 +31,6 @@ For good performance, one would like the timeout period to be long enough so tha
 
 Liveness can be further improved by keeping state on disk. The Paxos protocol can tolerate a minority of its acceptors failing, and all but one of its replicas and leaders failing. If more than that fail, consistency is still guaranteed, but liveness will be violated. A process that suffers from a power failure but can recover from disk is not theoretically considered crashed---it is simply slow for a while. Only a process that suffers a permanent disk failure would be considered crashed.
 
-For completeness, we note that for liveness we also assumed reliable communication. This assumption can be weakened by using a fair links assumption: if a correct process repeatedly sends a message to another correct process, at least one copy is eventually delivered. Reliable transmission of a message can then be implemented by periodic retransmission until an ack is received. In order to prevent overload on the network, the time intervals between retransmissions can grow until the load imposed on the network is negligible. The fair links assumption can be weakened further, but such a discussion is outside the scope of this paper.
+For completeness, we note that for liveness we also assumed reliable communication. This assumption can be weakened by using a fair links assumption: if a correct process repeatedly sends a message to another correct process, at least one copy is eventually delivered. Reliable transmission of a message can then be implemented by periodic retransmission until an Ack is received. In order to prevent overload on the network, the time intervals between retransmissions can grow until the load imposed on the network is negligible. The fair links assumption can be weakened further, but such a discussion is outside the scope of this paper.
 
 As an example of how liveness is achieved, a correct client retransmits its request to replicas until it has received a response. Because there are at least  f+1 replicas, at least one of those replicas will not fail and will assign a slot to the request and send a proposal to the  f+1 or more leaders. Thus at least one correct leader will try to get a command decided for that slot. Should a competing command get decided, the replica will reassign the request to a new slot and retry. While this may lead to starvation, in the absence of new requests, any outstanding request will eventually get decided in at least one slot.
