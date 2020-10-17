@@ -27,6 +27,7 @@ plugins:
 
 header_pages:
   - paxos.markdown
+  - variants.markdown
   - paper.markdown
   - code.markdown
   - glossary.markdown
