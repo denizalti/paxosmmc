@@ -14,10 +14,10 @@ and point out the most important properties of each variant.
 <map name="variantsmap">
     <area shape="rectangle" coords="25,150,80,175" href="index.html" alt="Paxos">
     <area shape="rectangle" coords="220,11,310,28" href="#disk" alt="Disk Paxos">
-    <area shape="rectangle" coords="265,35,365,55" href="#cheap" alt="Cheap Paxos">
+    <area shape="rectangle" coords="245,35,365,55" href="#cheap" alt="Cheap Paxos">
     <area shape="rectangle" coords="290,65,380,80" href="#fast" alt="Fast Paxos">
     <area shape="rectangle" coords="320,90,455,105" href="#generalized" alt="Generalized Paxos">
-    <area shape="rectangle" coords="495,35,620,55" href="#stoppable" alt="Stoppable Paxos">
+    <area shape="rectangle" coords="405,35,620,55" href="#stoppable" alt="Stoppable Paxos">
     <area shape="rectangle" coords="525,60,600,75" href="#mencius" alt="Mencius">
     <area shape="rectangle" coords="450,90,655,115" href="#vertical" alt="Vertical Paxos">
     <area shape="rectangle" coords="635,40,800,100" href="#egalitarian" alt="Egalitarian Paxos">
