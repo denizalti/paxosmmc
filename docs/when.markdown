@@ -3,8 +3,6 @@ layout: page
 permalink: /when/
 ---
 
-## When does Paxos work? a.k.a. what about the impossibility of consensus result?
-
 It would clearly be desirable that, if a client broadcasts a new command to all replicas, that it eventually receives at least one response. This is an example of a liveness property. It requires that if one or more commands have been proposed for a particular slot, that some command is eventually decided for that slot. Unfortunately, the Synod protocol as described does not guarantee this, even in the absence of any failure whatsoever. In fact, failures tend to be good for liveness. If all leaders but one fail, Paxos is guaranteed to terminate.
 
 <img src="../static/pingpong.png" />
