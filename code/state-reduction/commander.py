@@ -29,7 +29,7 @@ class Commander(Process):
         if self.ballot_number == msg.ballot_number:
           if msg.src in waitfor:
             waitfor.remove(msg.src)
-          if (2 * len(waitfor)) > len(self.acceptors):
+          if (2 * len(waitfor)) < len(self.acceptors):
             for r in self.replicas:
               self.sendMessage(r, DecisionMessage(self.me,
                                                   self.slot_number,
