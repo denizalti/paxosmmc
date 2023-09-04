@@ -28,9 +28,8 @@ class Scout(Process):
           if (2 * len(waitfor)) > len(self.acceptors):
             self.sendMessage(self.leader, AdoptedMessage(self.me, self.ballot_number, pvalues))
             return
-          else:
-            self.sendMessage(self.leader, PreemptedMessage(self.me, msg.ballot_number))
-            return
         else:
-          print "Scout: unexpected msg"
-
+          self.sendMessage(self.leader, PreemptedMessage(self.me, msg.ballot_number))
+          return
+      else:
+        print "Scout: unexpected msg"
