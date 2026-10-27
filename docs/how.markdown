@@ -211,13 +211,13 @@ Leaders use Commander and Scout subprocesses to run the Synod protocol.
 As we shall see, the following invariants hold in the Synod protocol:
 
 * L1: For any ballot b and slot s, at most one command c is selected and at most one commander for ⟨b,s,c⟩ is spawned.
-* L2: Suppose that for each αα among a majority of acceptors ⟨b,s,c⟩ ∈ α.accepted. If b′>b and a commander is spawned for ⟨b′,s,c′⟩, then c=c′.
+* L2: Suppose that for each α among a majority of acceptors ⟨b,s,c⟩ ∈ α.accepted. If b′>b and a commander is spawned for ⟨b′,s,c′⟩, then c=c′.
 
 Invariant L1 implies Invariant A4, because by L1 all acceptors that accept a pvalue for a particular ballot and slot number received the pvalue from the same commander. Similarly, Invariant L2 implies Invariant A5.
 
 ## Commander
 
-A leader may work on multiple slots at the same time. For each such slot, the leader selects a command and spawns a new process that we call a commander. While we present it as a separate process, the commander is really just a thread running within the leader. The commander runs what is known as phase 22 of the Synod protocol.
+A leader may work on multiple slots at the same time. For each such slot, the leader selects a command and spawns a new process that we call a commander. While we present it as a separate process, the commander is really just a thread running within the leader. The commander runs what is known as phase 2 of the Synod protocol.
 
 Below you can find the pseudo-code for a Commander:
 
@@ -249,13 +249,13 @@ Below you can find the pseudo-code for a Commander:
 
 A commander sends a ⟨p2a,λ,⟨b,s,c⟩⟩ message to all acceptors, and waits for responses of the form ⟨p2b,α,b′⟩. In each such response b′≥b will hold. There are two cases:
 
--   If a commander receives ⟨p2b,α,b⟩from all acceptors in a majority of acceptors, then the commander learns that command cc has been chosen for slot s. In this case, the commander notifies all replicas and exits. To satisfy Invariant R1, we need to enforce that if a commander learns that cc is chosen for slot s, and another commander learns that c′ is chosen for the same slot s, then c=c′. This is a consequence of Invariant A5: if a majority of acceptors accept ⟨b,s,c⟩, then for any later ballot b′ and the same slot number s, acceptors can only accept ⟨b′,s,c⟩. Thus if the commander of ⟨b′,s,c′⟩ learns that c′ has been chosen for s, it is guaranteed that c=c′ and no inconsistency occurs, assuming---of course---that Invariant L2 holds.
+-   If a commander receives ⟨p2b,α,b⟩from all acceptors in a majority of acceptors, then the commander learns that command c has been chosen for slot s. In this case, the commander notifies all replicas and exits. To satisfy Invariant R1, we need to enforce that if a commander learns that c is chosen for slot s, and another commander learns that c′ is chosen for the same slot s, then c=c′. This is a consequence of Invariant A5: if a majority of acceptors accept ⟨b,s,c⟩, then for any later ballot b′ and the same slot number s, acceptors can only accept ⟨b′,s,c⟩. Thus if the commander of ⟨b′,s,c′⟩ learns that c′ has been chosen for s, it is guaranteed that c=c′ and no inconsistency occurs, assuming---of course---that Invariant L2 holds.
 
--   If a commander receives ⟨p2b,α′,b′⟩from some acceptor α′, with b′≠b, then it learns that a ballot b′, which must be larger than b as guaranteed by acceptors, is active. This means that ballot bb may no longer be able to make progress, as there may no longer exist a majority of acceptors that can accept ⟨b,s,c⟩. In this case, the commander notifies its leader about the existence of b′, and exits.
+-   If a commander receives ⟨p2b,α′,b′⟩from some acceptor α′, with b′≠b, then it learns that a ballot b′, which must be larger than b as guaranteed by acceptors, is active. This means that ballot b may no longer be able to make progress, as there may no longer exist a majority of acceptors that can accept ⟨b,s,c⟩. In this case, the commander notifies its leader about the existence of b′, and exits.
 
 Under the assumptions that at most a minority of acceptors can crash, that messages are delivered reliably, and that the commander does not crash, the commander will eventually do one or the other.
 
-The leader must enforce Invariants L1 and L2. Because there is only one leader per ballot, Invariant L1 is trivial to enforce by the leader not spawning more than one commander per ballot number and slot number. To enforce Invariant L2, the leader runs what is often called phase 1 of the Synod protocol or a **view change protocol** for some ballot before spawning commanders for that ballot. The leader spawns a scout thread to run the view change protocol for some ballot bb. A leader starts at most one of these for any ballot bb, and only for its own ballots.
+The leader must enforce Invariants L1 and L2. Because there is only one leader per ballot, Invariant L1 is trivial to enforce by the leader not spawning more than one commander per ballot number and slot number. To enforce Invariant L2, the leader runs what is often called phase 1 of the Synod protocol or a **view change protocol** for some ballot before spawning commanders for that ballot. The leader spawns a scout thread to run the view change protocol for some ballot b. A leader starts at most one of these for any ballot b, and only for its own ballots.
 
 ## Scout
 
@@ -293,7 +293,7 @@ A scout completes successfully when it has collected ⟨p1b,α,b,r<sub>α</sub>
 Leader λ maintains three state variables:
 
 -   λ.ballot_num: a monotonically increasing ballot number, initially (0,λ).
--   λ.active: a boolean flag, initially 𝚏𝚊𝚕𝚜𝚎false.
+-   λ.active: a boolean flag, initially 𝚏𝚊𝚕𝚜𝚎.
 -   λ.proposals: a map of slot numbers to proposed commands in the form of a set of ⟨slot number,command⟩ pairs, initially empty. At any time, there is at most one entry per slot number in the set.
 
 ## Leader Operational Description
@@ -344,7 +344,7 @@ A leader goes between passive and active modes. When passive, the leader is 
 When active, the leader knows that a majority of acceptors, say A, have adopted ballot_num and thus no longer accept pvalues for ballot numbers less than ballot_num, because of Invariants A1 and A2. In addition, it has all pvalues accepted by the acceptors in A prior to ballot_num. The leader uses these pvalues to update its own proposals variable. There are two cases to consider:
 
 -   If, for some slot s, there is no pvalue in pvals, then, prior to ballot_num, it is not possible that any pvalue has been chosen or will be chosen for slot s. After all, suppose that some pvalue ⟨b,s,c⟩ were chosen, with b<ballot_num. This would require a majority of acceptors A′ to accept ⟨b,s,c⟩, but we have responses from a majority A that have adopted ballot_num and have not accepted, nor can accept, pvalues with a ballot number smaller than ballot_num, by Invariants A1 and A2. Because both A and A′ are majorities, A∩A′ is non-empty---some acceptor in the intersection must have violated Invariant A1, A2, or A3, which we assume cannot happen. Because no pvalue has been or will be chosen for slot s prior to ballot_num, the leader can propose any command for that slot without causing a conflict on an earlier ballot, thus enforcing Invariant L2.
--   Otherwise, let ⟨b,s,c⟩ be the pvalue with the maximum ballot number for slot s. Because of Invariant A4, this pvalue is unique---there cannot be two different commands for the same ballot number and slot number. Also note that b<ballot_numb<ballot_num, because acceptors only report pvalues they accepted before adopting ballot_num. Like the leader of ballot_num, the leader of bb must have picked cc carefully to ensure that Invariant L2 holds, and thus if a pvalue is chosen before or at bb, the command it contains must be cc. Since all acceptors in A have adopted ballot_num, no pvalues between bb and ballot_num can be chosen, by Invariants A1 and A2. Thus, by using cc as a command, λ enforces Invariant L2.
+-   Otherwise, let ⟨b,s,c⟩ be the pvalue with the maximum ballot number for slot s. Because of Invariant A4, this pvalue is unique---there cannot be two different commands for the same ballot number and slot number. Also note that b<ballot_num, because acceptors only report pvalues they accepted before adopting ballot_num. Like the leader of ballot_num, the leader of b must have picked c carefully to ensure that Invariant L2 holds, and thus if a pvalue is chosen before or at b, the command it contains must be c. Since all acceptors in A have adopted ballot_num, no pvalues between b and ballot_num can be chosen, by Invariants A1 and A2. Thus, by using c as a command, λ enforces Invariant L2.
 
 This inductive argument is the crux for the correctness of the Synod protocol. It demonstrates that Invariant L2 holds, which in turn implies Invariant A5, which in turn implies Invariant R1 that ensures that all replicas apply the same operations in the same order.
 
@@ -359,7 +359,7 @@ The update operator ⊲ applies to two sets of proposals. x⊲y returns the 
 
 Thus the line proposals:=proposals⊲pmax(pvals); updates the set of proposals, replacing for each slot number the command corresponding to the maximum pvalue in pvals, if any. Now the leader can start commanders for each slot while satisfying Invariant L2.
 
-If a new proposal arrives while the leader is active, the leader checks to see if it already has a proposal for the same slot ((and has thus spawned a commander for that slot)) in its set proposals. If not, the new proposal will satisfy Invariant L2, and thus the leader adds the proposal to proposals and spawns a commander.
+If a new proposal arrives while the leader is active, the leader checks to see if it already has a proposal for the same slot (and has thus spawned a commander for that slot) in its set proposals. If not, the new proposal will satisfy Invariant L2, and thus the leader adds the proposal to proposals and spawns a commander.
 
 If either a scout or a commander detects that an acceptor has adopted a ballot number b, with b>ballot_num, then it sends the leader a 𝚙𝚛𝚎𝚎𝚖𝚙𝚝𝚎𝚍 message. The leader becomes passive and spawns a new scout with a ballot number that is higher than b.
 
